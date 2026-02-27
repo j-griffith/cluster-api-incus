@@ -9,3 +9,4 @@ spec:
   image: images:ubuntu/24.04/cloud
   cpus: 2
   memoryMiB: 2048
+  rootDiskSizeGiB: 30
