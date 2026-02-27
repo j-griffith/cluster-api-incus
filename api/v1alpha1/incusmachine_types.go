@@ -35,6 +35,9 @@ type IncusMachineSpec struct {
 	Image     string `json:"image"`
 	CPUs      int    `json:"cpus"`
 	MemoryMiB int    `json:"memoryMiB"`
+	// RootDiskSizeGiB is the size of the root disk in gibibytes. If 0, the default from the image/profile is used.
+	// +optional
+	RootDiskSizeGiB int `json:"rootDiskSizeGiB,omitempty"`
 }
 
 type IncusMachineStatus struct {

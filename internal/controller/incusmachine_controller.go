@@ -107,8 +107,9 @@ func (r *IncusMachineReconciler) reconcileNormal(ctx context.Context, log logr.L
 	if memoryMiB < 1 {
 		memoryMiB = 2048
 	}
+	rootDiskSizeGiB := incusMachine.Spec.RootDiskSizeGiB
 
-	if err := r.IncusClient.CreateInstance(ctx, instanceName, image, cpus, memoryMiB); err != nil {
+	if err := r.IncusClient.CreateInstance(ctx, instanceName, image, cpus, memoryMiB, rootDiskSizeGiB); err != nil {
 		log.Error(err, "Failed to create Incus instance")
 		return ctrl.Result{}, err
 	}

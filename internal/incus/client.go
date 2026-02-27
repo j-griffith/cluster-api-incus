@@ -22,14 +22,14 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/lxc/incus/v6/shared/api"
 	incus "github.com/lxc/incus/v6/client"
+	"github.com/lxc/incus/v6/shared/api"
 )
 
 // Client provides operations for creating and deleting Incus instances.
 type Client interface {
 	Connect(ctx context.Context) error
-	CreateInstance(ctx context.Context, name, image string, cpus int, memoryMiB int) error
+	CreateInstance(ctx context.Context, name, image string, cpus, memoryMiB, rootDiskSizeGiB int) error
 	DeleteInstance(ctx context.Context, name string) error
 	InstanceExists(ctx context.Context, name string) (bool, error)
 	Close() error
@@ -80,7 +80,7 @@ func (c *clientImpl) Connect(ctx context.Context) error {
 }
 
 // CreateInstance creates a new Incus VM instance from an image.
-func (c *clientImpl) CreateInstance(ctx context.Context, name, image string, cpus int, memoryMiB int) error {
+func (c *clientImpl) CreateInstance(ctx context.Context, name, image string, cpus, memoryMiB, rootDiskSizeGiB int) error {
 	if err := c.Connect(ctx); err != nil {
 		return err
 	}
@@ -96,20 +96,34 @@ func (c *clientImpl) CreateInstance(ctx context.Context, name, image string, cpu
 		image = "images:ubuntu/24.04"
 	}
 
+	instancePut := api.InstancePut{
+		Config: map[string]string{
+			"limits.cpu":          fmt.Sprintf("%d", cpus),
+			"limits.memory":       fmt.Sprintf("%dMiB", memoryMiB),
+			"security.secureboot": "false",
+		},
+		Profiles: []string{"default"},
+	}
+
+	// Override root disk size if specified
+	if rootDiskSizeGiB > 0 {
+		instancePut.Devices = map[string]map[string]string{
+			"root": {
+				"type": "disk",
+				"pool": "default",
+				"path": "/",
+				"size": fmt.Sprintf("%dGiB", rootDiskSizeGiB),
+			},
+		}
+	}
+
 	req := api.InstancesPost{
-		Name: name,
-		Type: api.InstanceTypeVM,
+		Name:         name,
+		Type:         api.InstanceTypeVM,
+		InstancePut:  instancePut,
 		Source: api.InstanceSource{
 			Type:  "image",
 			Alias: image,
-		},
-		InstancePut: api.InstancePut{
-			Config: map[string]string{
-				"limits.cpu":           fmt.Sprintf("%d", cpus),
-				"limits.memory":        fmt.Sprintf("%dMiB", memoryMiB),
-				"security.secureboot":   "false",
-			},
-			Profiles: []string{"default"},
 		},
 		Start: true,
 	}
