@@ -7,7 +7,6 @@ rules:
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
   resources:
-  - incusclusters
   - incusmachines
   verbs:
   - create
@@ -20,14 +19,12 @@ rules:
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
   resources:
-  - incusclusters/finalizers
   - incusmachines/finalizers
   verbs:
   - update
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
   resources:
-  - incusclusters/status
   - incusmachines/status
   verbs:
   - get
